@@ -148,6 +148,9 @@
         color: var(--text);
         padding: 10px;
       }
+      .filter-builder { grid-column: 1 / -1; display: grid; gap: 10px; }
+      .filter-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
+      .filter-actions { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
       .cards {
         display: grid;
         gap: 10px;
@@ -329,38 +332,10 @@
         </button>
       </div>
       <section class="filters">
-        <div>
-          <label>1. Clasificación</label
-          ><select id="ratingFilter">
-            <option value="">Todas</option>
-            <option value="5">5 estrellas</option>
-            <option value="4">4 estrellas</option>
-            <option value="3">3 estrellas</option>
-            <option value="2">2 estrellas</option>
-            <option value="1">1 estrella</option>
-          </select>
-        </div>
-        <div>
-          <label>2. Agrupar por</label
-          ><select id="groupField">
-            <option value="">Sin segundo filtro</option>
-            <option value="title">Título / obra</option>
-            <option value="genre">Género</option>
-            <option value="composer">Compositor</option>
-            <option value="performer">Intérprete</option>
-            <option value="group">Agrupación</option>
-            <option value="album">Álbum</option>
-          </select>
-        </div>
-        <div>
-          <label>3. Elegir valor</label
-          ><select id="groupValue" disabled>
-            <option value="">Todos</option>
-          </select>
-        </div>
-        <div>
-          <label>Resultados</label>
-          <div id="count" style="padding: 10px">0 canciones</div>
+        <div class="filter-builder" id="filtersHost"></div>
+        <div class="filter-actions">
+          <button id="addFilter" type="button">＋ Agregar filtro</button>
+          <div id="count">0 canciones</div>
         </div>
       </section>
       <section class="cards" id="list"></section>
@@ -422,6 +397,14 @@
         ["url", "Enlace para escuchar"],
       ];
       const colors = ["#f5c84c", "#d7c55a", "#7ec7a7", "#43bddd", "#4f7cff"];
+      const filterFields = [
+        ["rating", "Clasificación"], ["title", "Título / obra"],
+        ["movementNumber", "Movimiento n.º"], ["movementName", "Nombre del movimiento"],
+        ["owned", "La tengo"], ["group", "Agrupación"], ["performer", "Intérprete"],
+        ["composer", "Compositor"], ["genre", "Género"], ["album", "Álbum"],
+        ["director", "Director"], ["year", "Año de lanzamiento"], ["label", "Disquera"],
+      ];
+      let filterState = [{ field: "", value: "" }];
       let songs = load("hs-songs"),
         trash = load("hs-trash"),
         editing = null,
@@ -463,30 +446,61 @@
           .join("");
       }
       function filtered() {
-        let a = songs,
-          rf = document.querySelector("#ratingFilter").value,
-          gf = document.querySelector("#groupField").value,
-          gv = document.querySelector("#groupValue").value,
+        let a = applyFilters(songs, filterState),
           q = document.querySelector("#q").value.toLowerCase();
-        if (rf) a = a.filter((s) => +s.rating === +rf);
-        if (gf && gv) a = a.filter((s) => String(s[gf] || "") === gv);
         if (q)
           a = a.filter((s) =>
             Object.values(s).some((v) => String(v).toLowerCase().includes(q)),
           );
         return a;
       }
-      function updateGroup() {
-        let gf = groupField.value,
-          rf = ratingFilter.value,
-          a = rf ? songs.filter((s) => +s.rating === +rf) : songs,
-          vals = gf
-            ? [...new Set(a.map((s) => s[gf]).filter(Boolean))].sort()
-            : [];
-        groupValue.innerHTML =
-          '<option value="">Todos</option>' +
-          vals.map((v) => `<option>${esc(v)}</option>`).join("");
-        groupValue.disabled = !gf;
+      function applyFilters(items, filters) {
+        return filters.reduce((result, filter) => {
+          if (!filter.field || filter.value === "") return result;
+          return result.filter((song) => String(song[filter.field] ?? "") === filter.value);
+        }, items);
+      }
+      function valuesFor(field, items) {
+        if (!field) return [];
+        return [...new Set(items.map((song) => String(song[field] ?? "")).filter(Boolean))]
+          .sort((a, b) => field === "rating" ? Number(b) - Number(a) : a.localeCompare(b, "es"));
+      }
+      function valueLabel(field, value) {
+        if (field === "rating") return `${value} ${value === "1" ? "estrella" : "estrellas"}`;
+        if (field === "owned") return value === "true" ? "Sí la tengo" : "No la tengo";
+        return value;
+      }
+      function renderFilters() {
+        const selected = filterState.map((filter) => filter.field).filter(Boolean);
+        let previousItems = songs;
+        filtersHost.innerHTML = filterState.map((filter, index) => {
+          const allowedFields = filterFields.filter(([key]) => key === filter.field || !selected.includes(key));
+          const values = valuesFor(filter.field, previousItems);
+          if (filter.value && !values.includes(filter.value)) filter.value = "";
+          const fieldOptions = '<option value="">Elegir campo…</option>' + allowedFields
+            .map(([key, label]) => `<option value="${key}" ${key === filter.field ? "selected" : ""}>${label}</option>`).join("");
+          const valueOptions = '<option value="">Todos</option>' + values
+            .map((value) => `<option value="${esc(value)}" ${value === filter.value ? "selected" : ""}>${esc(valueLabel(filter.field, value))}</option>`).join("");
+          const remove = index ? `<button type="button" class="small danger remove-filter" data-index="${index}">✕</button>` : "";
+          const row = `<div class="filter-row"><div><label>Filtro ${index + 1}</label><select class="filter-field" data-index="${index}">${fieldOptions}</select></div><div><label>Valor</label><select class="filter-value" data-index="${index}" ${filter.field ? "" : "disabled"}>${valueOptions}</select></div>${remove}</div>`;
+          previousItems = applyFilters(previousItems, [filter]);
+          return row;
+        }).join("");
+        addFilter.disabled = filterState.length >= filterFields.length;
+        document.querySelectorAll(".filter-field").forEach((select) => select.onchange = () => {
+          const index = Number(select.dataset.index);
+          filterState[index] = { field: select.value, value: "" };
+          filterState.slice(index + 1).forEach((filter) => filter.value = "");
+          renderFilters(); render();
+        });
+        document.querySelectorAll(".filter-value").forEach((select) => select.onchange = () => {
+          filterState[Number(select.dataset.index)].value = select.value;
+          renderFilters(); render();
+        });
+        document.querySelectorAll(".remove-filter").forEach((button) => button.onclick = () => {
+          filterState.splice(Number(button.dataset.index), 1);
+          renderFilters(); render();
+        });
       }
       function render() {
         let a = filtered();
@@ -608,14 +622,10 @@
         .forEach(
           (b) => (b.onclick = () => trashModal.classList.remove("open")),
         );
-      [q, ratingFilter, groupValue].forEach((el) => (el.oninput = render));
-      groupField.onchange = () => {
-        updateGroup();
-        render();
-      };
-      ratingFilter.onchange = () => {
-        updateGroup();
-        render();
+      q.oninput = render;
+      addFilter.onclick = () => {
+        if (filterState.length < filterFields.length) filterState.push({ field: "", value: "" });
+        renderFilters();
       };
       theme.onclick = () => {
         document.body.classList.toggle("light");
@@ -627,7 +637,7 @@
         document.body.classList.add("light");
         theme.textContent = "☾";
       }
-      updateGroup();
+      renderFilters();
       render();
       if (window.HuySanoDrive) {
         window.HuySanoDrive.init({
@@ -638,7 +648,7 @@
             localStorage.setItem("hs-songs", JSON.stringify(songs));
             localStorage.setItem("hs-trash", JSON.stringify(trash));
             localStorage.setItem("hs-updated-at", data.updatedAt || new Date().toISOString());
-            updateGroup();
+            renderFilters();
             render();
           },
         });
