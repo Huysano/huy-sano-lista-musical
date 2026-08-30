@@ -313,8 +313,8 @@
       </div>
       <div class="actions">
         <button class="icon" id="theme" aria-label="Cambiar tema">☀</button
-        ><button id="driveBtn">☁ Conectar Google</button
-        ><button class="primary" id="add">＋ Agregar</button>
+        ><button id="driveBtn">☁ Conectar Drive</button
+        ><button class="primary" id="add">＋ Agregar canción</button>
       </div>
     </header>
     <main class="wrap">
@@ -479,10 +479,11 @@
           if (filter.value && !values.includes(filter.value)) filter.value = "";
           const fieldOptions = '<option value="">Elegir campo…</option>' + allowedFields
             .map(([key, label]) => `<option value="${key}" ${key === filter.field ? "selected" : ""}>${label}</option>`).join("");
-          const valueOptions = '<option value="">Todos</option>' + values
+          const valueOptions = '<option value="">Todos los valores</option>' + values
             .map((value) => `<option value="${esc(value)}" ${value === filter.value ? "selected" : ""}>${esc(valueLabel(filter.field, value))}</option>`).join("");
           const remove = index ? `<button type="button" class="small danger remove-filter" data-index="${index}">✕</button>` : "";
-          const row = `<div class="filter-row"><div><label>Filtro ${index + 1}</label><select class="filter-field" data-index="${index}">${fieldOptions}</select></div><div><label>Valor</label><select class="filter-value" data-index="${index}" ${filter.field ? "" : "disabled"}>${valueOptions}</select></div>${remove}</div>`;
+          const fieldLabel = filterFields.find(([key]) => key === filter.field)?.[1] || "valor";
+          const row = `<div class="filter-row"><div><label>Filtro ${index + 1}</label><select class="filter-field" data-index="${index}">${fieldOptions}</select></div>${filter.field ? `<div><label>Elegir ${fieldLabel}</label><select class="filter-value" data-index="${index}">${valueOptions}</select></div>` : ""}${remove}</div>`;
           previousItems = applyFilters(previousItems, [filter]);
           return row;
         }).join("");
