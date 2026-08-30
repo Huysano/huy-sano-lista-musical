@@ -171,6 +171,7 @@
         font-size: 13px;
         color: var(--muted);
         line-height: 1.55;
+        overflow-wrap: anywhere;
       }
       .stars {
         display: flex;
@@ -347,6 +348,7 @@
             <option value="genre">Género</option>
             <option value="composer">Compositor</option>
             <option value="performer">Intérprete</option>
+            <option value="group">Agrupación</option>
             <option value="album">Álbum</option>
           </select>
         </div>
@@ -410,6 +412,7 @@
         ["movementNumber", "Movimiento n.º"],
         ["movementName", "Nombre del movimiento"],
         ["performer", "Intérprete"],
+        ["group", "Agrupación"],
         ["composer", "Compositor"],
         ["genre", "Género"],
         ["album", "Álbum"],
@@ -493,7 +496,7 @@
           ? a
               .map(
                 (s) =>
-                  `<article class="song"><div class="song-head"><div><h2>${esc(s.title)}</h2><div class="meta">${[s.composer, s.performer, s.genre, s.album].filter(Boolean).map(esc).join(" · ") || "Sin detalles adicionales"}</div></div><label class="owned"><input type="checkbox" ${s.owned ? "checked" : ""} onchange="toggleOwned('${s.id}',this.checked)"> La tengo</label></div><div class="stars">${stars(+s.rating || 0, true, s.id)}</div><div class="meta">${s.movementNumber ? `Movimiento ${esc(s.movementNumber)}` : ""} ${esc(s.movementName || "")}</div><div class="row-actions"><button class="small" onclick="openEdit('${s.id}')">✎ Editar</button>${s.url ? `<button class="small" onclick="location.href='${esc(s.url)}'">↗ Escuchar</button>` : ""}<button class="small danger" onclick="toTrash('${s.id}')">🗑 Papelera</button></div></article>`,
+                  `<article class="song"><div class="song-head"><div><h2>${esc(s.title)}</h2><div class="meta">${[s.composer, s.group, s.performer, s.genre, s.album].filter(Boolean).map(esc).join(" · ") || "Sin detalles adicionales"}</div></div><label class="owned"><input type="checkbox" ${s.owned ? "checked" : ""} onchange="toggleOwned('${s.id}',this.checked)"> La tengo</label></div><div class="stars">${stars(+s.rating || 0, true, s.id)}</div><div class="meta">${s.movementNumber ? `Movimiento ${esc(s.movementNumber)}` : ""} ${esc(s.movementName || "")}</div><div class="row-actions"><button class="small" onclick="openEdit('${s.id}')">✎ Editar</button>${s.url ? `<button class="small" onclick="location.href='${esc(s.url)}'">↗ Escuchar</button>` : ""}<button class="small danger" onclick="toTrash('${s.id}')">🗑 Papelera</button></div></article>`,
               )
               .join("")
           : '<div class="empty">♫<h2>Tu colección está vacía</h2><p>Agrega la primera canción para comenzar.</p></div>';
