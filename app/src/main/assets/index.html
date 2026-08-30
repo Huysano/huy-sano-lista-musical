@@ -149,7 +149,7 @@
         padding: 10px;
       }
       .filter-builder { grid-column: 1 / -1; display: grid; gap: 10px; }
-      .filter-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
+      .filter-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
       .filter-actions { display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
       .cards {
         display: grid;
@@ -475,27 +475,29 @@
         let previousItems = songs;
         filtersHost.innerHTML = filterState.map((filter, index) => {
           const allowedFields = filterFields.filter(([key]) => key === filter.field || !selected.includes(key));
-          const values = valuesFor(filter.field, previousItems);
-          if (filter.value && !values.includes(filter.value)) filter.value = "";
-          const fieldOptions = '<option value="">Elegir campo…</option>' + allowedFields
-            .map(([key, label]) => `<option value="${key}" ${key === filter.field ? "selected" : ""}>${label}</option>`).join("");
-          const valueOptions = '<option value="">Todos los valores</option>' + values
-            .map((value) => `<option value="${esc(value)}" ${value === filter.value ? "selected" : ""}>${esc(valueLabel(filter.field, value))}</option>`).join("");
+          const currentKey = filter.field ? encodeURIComponent(`${filter.field}\u0000${filter.value}`) : "";
+          const groupedOptions = allowedFields.map(([field, label]) => {
+            const values = valuesFor(field, previousItems);
+            const options = values.map((value) => {
+              const key = encodeURIComponent(`${field}\u0000${value}`);
+              return `<option value="${key}" ${key === currentKey ? "selected" : ""}>${esc(valueLabel(field, value))}</option>`;
+            }).join("");
+            return options ? `<optgroup label="${esc(label)}">${options}</optgroup>` : "";
+          }).join("");
           const remove = index ? `<button type="button" class="small danger remove-filter" data-index="${index}">✕</button>` : "";
-          const fieldLabel = filterFields.find(([key]) => key === filter.field)?.[1] || "valor";
-          const row = `<div class="filter-row"><div><label>Filtro ${index + 1}</label><select class="filter-field" data-index="${index}">${fieldOptions}</select></div>${filter.field ? `<div><label>Elegir ${fieldLabel}</label><select class="filter-value" data-index="${index}">${valueOptions}</select></div>` : ""}${remove}</div>`;
+          const title = index === 0 ? "Filtrar" : index === 1 ? "Filtro secundario" : `Filtro adicional ${index}`;
+          const row = `<div class="filter-row"><div><label>${title}</label><select class="filter-choice" data-index="${index}"><option value="">Elegir filtro…</option>${groupedOptions}</select></div>${remove}</div>`;
           previousItems = applyFilters(previousItems, [filter]);
           return row;
         }).join("");
         addFilter.disabled = filterState.length >= filterFields.length;
-        document.querySelectorAll(".filter-field").forEach((select) => select.onchange = () => {
+        document.querySelectorAll(".filter-choice").forEach((select) => select.onchange = () => {
           const index = Number(select.dataset.index);
-          filterState[index] = { field: select.value, value: "" };
+          if (select.value) {
+            const [field, value] = decodeURIComponent(select.value).split("\u0000");
+            filterState[index] = { field, value };
+          } else filterState[index] = { field: "", value: "" };
           filterState.slice(index + 1).forEach((filter) => filter.value = "");
-          renderFilters(); render();
-        });
-        document.querySelectorAll(".filter-value").forEach((select) => select.onchange = () => {
-          filterState[Number(select.dataset.index)].value = select.value;
           renderFilters(); render();
         });
         document.querySelectorAll(".remove-filter").forEach((button) => button.onclick = () => {
