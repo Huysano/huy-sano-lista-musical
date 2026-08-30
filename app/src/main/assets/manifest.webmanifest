@@ -1,0 +1,10 @@
+{
+  "name": "Huy Sano — Lista Musical",
+  "short_name": "Huy Sano",
+  "description": "Conserva, clasifica y vuelve a encontrar las canciones que te marcaron.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#070b18",
+  "theme_color": "#3867ff",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
