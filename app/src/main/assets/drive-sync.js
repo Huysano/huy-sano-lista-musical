@@ -17,7 +17,7 @@
       el("driveStatus").firstChild.textContent = message + " ";
       el("driveDisconnect").hidden = !connected;
     }
-    if (el("driveBtn")) el("driveBtn").textContent = connected ? "☁ Sincronizar ahora" : "☁ Conectar Google";
+    if (el("driveBtn")) el("driveBtn").textContent = connected ? "☁ Sincronizar ahora" : "☁ Conectar Drive";
   }
 
   async function driveJson(url, options = {}) {
