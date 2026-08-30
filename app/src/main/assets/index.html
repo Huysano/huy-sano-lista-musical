@@ -1,8 +1,648 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Huy Sano — Lista Musical</title><style>
-:root{--bg:#070b18;--panel:#0e1730;--panel2:#162347;--text:#e8efff;--muted:#8ea5c9;--line:#314474;--blue:#4f7cff;--danger:#ff6577}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;min-height:100vh}.light{--bg:#eef3fc;--panel:#fff;--panel2:#dfe9fb;--text:#17213b;--muted:#52698f;--line:#c4d1e8}.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:18px 16px;background:var(--panel2);border-bottom:1px solid var(--line)}.brand{display:flex;gap:12px;align-items:center}.logo{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#3867ff;box-shadow:0 0 26px #3867ff66;font-size:22px}.eyebrow{font-size:10px;letter-spacing:.2em;color:var(--muted)}h1{font-family:Georgia,serif;font-size:20px;margin:2px 0}.actions{display:flex;gap:8px}button,.btn,input,select{font:inherit}.btn,button{border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--text);padding:10px 13px}.primary{background:#3867ff;border-color:#3867ff;color:white}.icon{padding:10px}.wrap{padding:18px 14px 40px;max-width:1500px;margin:auto}.tools{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px}.search{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:12px}.filters{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px;margin-bottom:14px}.filters label,.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:6px}.filters select{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:9px;color:var(--text);padding:10px}.cards{display:grid;gap:10px}.song{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px}.song-head{display:flex;justify-content:space-between;gap:10px}.song h2{font-size:17px;margin:0 0 6px}.meta{font-size:13px;color:var(--muted);line-height:1.55}.stars{display:flex;gap:2px;margin:8px 0}.star{font-size:24px;line-height:1;color:#46516d;background:none;border:0;padding:0}.owned{display:flex;gap:8px;align-items:center;font-size:13px}.row-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.small{padding:7px 9px;font-size:12px}.danger{color:var(--danger)}.empty{text-align:center;color:var(--muted);padding:70px 10px;background:var(--panel);border:1px solid var(--line);border-radius:16px}.modal{position:fixed;inset:0;z-index:20;background:#000a;display:none;align-items:flex-end}.modal.open{display:flex}.sheet{width:100%;max-height:94vh;overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:24px 24px 0 0;padding:20px}.sheet-head{display:flex;justify-content:space-between;align-items:center}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field.full{grid-column:1/-1}.field input{width:100%;padding:11px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--text)}.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.trash-list{display:grid;gap:8px}.trash-item{display:flex;justify-content:space-between;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px}.badge{font-size:11px;color:var(--muted)}@media(min-width:760px){.tools{grid-template-columns:1fr auto}.filters{grid-template-columns:repeat(4,minmax(0,1fr))}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.sheet{max-width:680px;margin-left:auto;height:100%;max-height:100vh;border-radius:24px 0 0 24px}.modal{align-items:stretch}}
-</style></head><body><header class="top"><div class="brand"><div class="logo">♫</div><div><div class="eyebrow">COLECCIÓN PERSONAL</div><h1>Huy Sano — Lista Musical</h1></div></div><div class="actions"><button class="icon" id="theme" aria-label="Cambiar tema">☀</button><button class="primary" id="add">＋ Agregar</button></div></header><main class="wrap"><div class="tools"><input class="search" id="q" placeholder="Buscar en la colección…"><button id="trashBtn">🗑 Papelera (<span id="trashCount">0</span>)</button></div><section class="filters"><div><label>1. Clasificación</label><select id="ratingFilter"><option value="">Todas</option><option value="5">5 estrellas</option><option value="4">4 estrellas</option><option value="3">3 estrellas</option><option value="2">2 estrellas</option><option value="1">1 estrella</option></select></div><div><label>2. Agrupar por</label><select id="groupField"><option value="">Sin segundo filtro</option><option value="title">Título / obra</option><option value="genre">Género</option><option value="composer">Compositor</option><option value="performer">Intérprete</option><option value="album">Álbum</option></select></div><div><label>3. Elegir valor</label><select id="groupValue" disabled><option value="">Todos</option></select></div><div><label>Resultados</label><div id="count" style="padding:10px">0 canciones</div></div></section><section class="cards" id="list"></section></main>
-<div class="modal" id="editModal"><section class="sheet"><div class="sheet-head"><div><div class="eyebrow" id="mode">NUEVO REGISTRO</div><h2 id="formTitle">Agregar canción</h2></div><button class="icon close">✕</button></div><form id="form"><div class="grid" id="fields"></div><div class="field full" style="margin-top:14px"><label>Clasificación personal</label><div class="stars" id="formStars"></div><span class="badge" id="ratingText">Sin clasificar</span></div><label class="owned" style="margin-top:16px"><input type="checkbox" id="owned"> La tengo</label><div class="form-actions"><button type="button" class="close">Cancelar</button><button class="primary" type="submit">Guardar canción</button></div></form></section></div>
-<div class="modal" id="trashModal"><section class="sheet"><div class="sheet-head"><div><div class="eyebrow">REGISTROS ELIMINADOS</div><h2>Papelera</h2></div><button class="icon closeTrash">✕</button></div><div class="trash-list" id="trashList"></div></section></div>
-<script>
-const defs=[['title','Título *'],['movementNumber','Movimiento n.º'],['movementName','Nombre del movimiento'],['performer','Intérprete'],['composer','Compositor'],['genre','Género'],['album','Álbum'],['director','Director'],['year','Año de lanzamiento'],['label','Disquera'],['url','Enlace para escuchar']];const colors=['#f5c84c','#d7c55a','#7ec7a7','#43bddd','#4f7cff'];let songs=load('hs-songs'),trash=load('hs-trash'),editing=null,rating=0;function load(k){try{return JSON.parse(localStorage.getItem(k)||'[]')}catch{return[]}}function save(){localStorage.setItem('hs-songs',JSON.stringify(songs));localStorage.setItem('hs-trash',JSON.stringify(trash));render()}function esc(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}function stars(value,clickable,id){let c=value?colors[value-1]:'#46516d';return [1,2,3,4,5].map(n=>`<button class="star" ${clickable?`onclick="rateRow('${id}',${n})"`:''} style="color:${n<=value?c:'#46516d'}">★</button>`).join('')}function filtered(){let a=songs,rf=document.querySelector('#ratingFilter').value,gf=document.querySelector('#groupField').value,gv=document.querySelector('#groupValue').value,q=document.querySelector('#q').value.toLowerCase();if(rf)a=a.filter(s=>+s.rating===+rf);if(gf&&gv)a=a.filter(s=>String(s[gf]||'')===gv);if(q)a=a.filter(s=>Object.values(s).some(v=>String(v).toLowerCase().includes(q)));return a}function updateGroup(){let gf=groupField.value,rf=ratingFilter.value,a=rf?songs.filter(s=>+s.rating===+rf):songs,vals=gf?[...new Set(a.map(s=>s[gf]).filter(Boolean))].sort():[];groupValue.innerHTML='<option value="">Todos</option>'+vals.map(v=>`<option>${esc(v)}</option>`).join('');groupValue.disabled=!gf}function render(){let a=filtered();count.textContent=`${a.length} ${a.length===1?'canción':'canciones'}`;trashCount.textContent=trash.length;list.innerHTML=a.length?a.map(s=>`<article class="song"><div class="song-head"><div><h2>${esc(s.title)}</h2><div class="meta">${[s.composer,s.performer,s.genre,s.album].filter(Boolean).map(esc).join(' · ')||'Sin detalles adicionales'}</div></div><label class="owned"><input type="checkbox" ${s.owned?'checked':''} onchange="toggleOwned('${s.id}',this.checked)"> La tengo</label></div><div class="stars">${stars(+s.rating||0,true,s.id)}</div><div class="meta">${s.movementNumber?`Movimiento ${esc(s.movementNumber)}`:''} ${esc(s.movementName||'')}</div><div class="row-actions"><button class="small" onclick="openEdit('${s.id}')">✎ Editar</button>${s.url?`<button class="small" onclick="location.href='${esc(s.url)}'">↗ Escuchar</button>`:''}<button class="small danger" onclick="toTrash('${s.id}')">🗑 Papelera</button></div></article>`).join(''):'<div class="empty">♫<h2>Tu colección está vacía</h2><p>Agrega la primera canción para comenzar.</p></div>';renderTrash()}function toggleOwned(id,next){let s=songs.find(x=>x.id===id);if(!s)return;if(confirm(next?'¿Confirmas que sí tienes esta canción?':'¿Confirmas que ya no tienes esta canción?')){s.owned=next;save()}else render()}function rateRow(id,n){songs=songs.map(s=>s.id===id?{...s,rating:n}:s);save()}function toTrash(id){let s=songs.find(x=>x.id===id);if(!s)return;trash.unshift(s);songs=songs.filter(x=>x.id!==id);save()}function renderTrash(){trashList.innerHTML=trash.length?trash.map(s=>`<div class="trash-item"><b>${esc(s.title)}</b><div><button class="small" onclick="restore('${s.id}')">↶ Restaurar</button><button class="small danger" onclick="destroy('${s.id}')">Eliminar</button></div></div>`).join(''):'<div class="empty">La papelera está vacía.</div>'}function restore(id){let s=trash.find(x=>x.id===id);songs.unshift(s);trash=trash.filter(x=>x.id!==id);save()}function destroy(id){if(confirm('Este proceso es irreversible. ¿Eliminar definitivamente?')){trash=trash.filter(x=>x.id!==id);save()}}function openEdit(id){editing=id||null;let s=songs.find(x=>x.id===id)||{};mode.textContent=id?'EDITAR REGISTRO':'NUEVO REGISTRO';formTitle.textContent=id?'Editar canción':'Agregar canción';defs.forEach(([k])=>document.querySelector(`[name=${k}]`).value=s[k]||'');owned.checked=!!s.owned;rating=+s.rating||0;drawFormStars();editModal.classList.add('open')}function drawFormStars(){formStars.innerHTML=[1,2,3,4,5].map(n=>`<button type="button" class="star" onclick="rating=${n};drawFormStars()" style="color:${n<=rating?(colors[rating-1]):'#46516d'}">★</button>`).join('');ratingText.textContent=rating?`${rating} de 5 estrellas`:'Sin clasificar'}fields.innerHTML=defs.map(([k,l])=>`<div class="field ${['title','movementName','url'].includes(k)?'full':''}"><label>${l}</label><input name="${k}" ${k==='title'?'required':''} ${k==='year'?'type="number"':''} ${k==='url'?'type="url"':''}></div>`).join('');form.onsubmit=e=>{e.preventDefault();let data=Object.fromEntries(defs.map(([k])=>[k,form.elements[k].value.trim()]));data.owned=owned.checked;data.rating=rating;if(editing)songs=songs.map(s=>s.id===editing?{...s,...data}:s);else songs.unshift({...data,id:Date.now()+'-'+Math.random().toString(16).slice(2)});editModal.classList.remove('open');save()};add.onclick=()=>openEdit();document.querySelectorAll('.close').forEach(b=>b.onclick=()=>editModal.classList.remove('open'));trashBtn.onclick=()=>trashModal.classList.add('open');document.querySelectorAll('.closeTrash').forEach(b=>b.onclick=()=>trashModal.classList.remove('open'));[q,ratingFilter,groupValue].forEach(el=>el.oninput=render);groupField.onchange=()=>{updateGroup();render()};ratingFilter.onchange=()=>{updateGroup();render()};theme.onclick=()=>{document.body.classList.toggle('light');let t=document.body.classList.contains('light')?'light':'dark';localStorage.setItem('hs-theme',t);theme.textContent=t==='light'?'☾':'☀'};if(localStorage.getItem('hs-theme')==='light'){document.body.classList.add('light');theme.textContent='☾'}updateGroup();render();
-</script></body></html>
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#070b18" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" />
+    <title>Huy Sano — Lista Musical</title>
+    <style>
+      :root {
+        --bg: #070b18;
+        --panel: #0e1730;
+        --panel2: #162347;
+        --text: #e8efff;
+        --muted: #8ea5c9;
+        --line: #314474;
+        --blue: #4f7cff;
+        --danger: #ff6577;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        min-height: 100vh;
+      }
+      .light {
+        --bg: #eef3fc;
+        --panel: #fff;
+        --panel2: #dfe9fb;
+        --text: #17213b;
+        --muted: #52698f;
+        --line: #c4d1e8;
+      }
+      .top {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 16px;
+        background: var(--panel2);
+        border-bottom: 1px solid var(--line);
+      }
+      .brand {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .logo {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: #3867ff;
+        box-shadow: 0 0 26px #3867ff66;
+        font-size: 22px;
+      }
+      .eyebrow {
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        color: var(--muted);
+      }
+      h1 {
+        font-family: Georgia, serif;
+        font-size: 20px;
+        margin: 2px 0;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+      button,
+      .btn,
+      input,
+      select {
+        font: inherit;
+      }
+      .btn,
+      button {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel);
+        color: var(--text);
+        padding: 10px 13px;
+      }
+      .primary {
+        background: #3867ff;
+        border-color: #3867ff;
+        color: white;
+      }
+      .icon {
+        padding: 10px;
+      }
+      .wrap {
+        padding: 18px 14px 40px;
+        max-width: 1500px;
+        margin: auto;
+      }
+      .tools {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .search {
+        width: 100%;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        color: var(--text);
+        padding: 12px;
+      }
+      .filters {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 13px;
+        margin-bottom: 14px;
+      }
+      .filters label,
+      .field label {
+        display: block;
+        font-size: 11px;
+        color: var(--muted);
+        margin-bottom: 6px;
+      }
+      .filters select {
+        width: 100%;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        color: var(--text);
+        padding: 10px;
+      }
+      .cards {
+        display: grid;
+        gap: 10px;
+      }
+      .song {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 14px;
+      }
+      .song-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .song h2 {
+        font-size: 17px;
+        margin: 0 0 6px;
+      }
+      .meta {
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+      .stars {
+        display: flex;
+        gap: 2px;
+        margin: 8px 0;
+      }
+      .star {
+        font-size: 24px;
+        line-height: 1;
+        color: #46516d;
+        background: none;
+        border: 0;
+        padding: 0;
+      }
+      .owned {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        font-size: 13px;
+      }
+      .row-actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+      }
+      .small {
+        padding: 7px 9px;
+        font-size: 12px;
+      }
+      .danger {
+        color: var(--danger);
+      }
+      .empty {
+        text-align: center;
+        color: var(--muted);
+        padding: 70px 10px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 16px;
+      }
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        background: #000a;
+        display: none;
+        align-items: flex-end;
+      }
+      .modal.open {
+        display: flex;
+      }
+      .sheet {
+        width: 100%;
+        max-height: 94vh;
+        overflow: auto;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 24px 24px 0 0;
+        padding: 20px;
+      }
+      .sheet-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .field.full {
+        grid-column: 1/-1;
+      }
+      .field input {
+        width: 100%;
+        padding: 11px;
+        border-radius: 9px;
+        border: 1px solid var(--line);
+        background: var(--bg);
+        color: var(--text);
+      }
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 18px;
+      }
+      .trash-list {
+        display: grid;
+        gap: 8px;
+      }
+      .trash-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px;
+      }
+      .badge {
+        font-size: 11px;
+        color: var(--muted);
+      }
+      @media (min-width: 760px) {
+        .tools {
+          grid-template-columns: 1fr auto;
+        }
+        .filters {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+        .cards {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        .sheet {
+          max-width: 680px;
+          margin-left: auto;
+          height: 100%;
+          max-height: 100vh;
+          border-radius: 24px 0 0 24px;
+        }
+        .modal {
+          align-items: stretch;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <div class="logo">♫</div>
+        <div>
+          <div class="eyebrow">COLECCIÓN PERSONAL</div>
+          <h1>Huy Sano — Lista Musical</h1>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="icon" id="theme" aria-label="Cambiar tema">☀</button
+        ><button id="driveBtn">☁ Conectar Google</button
+        ><button class="primary" id="add">＋ Agregar</button>
+      </div>
+    </header>
+    <main class="wrap">
+      <div id="driveStatus" class="badge" style="margin-bottom: 10px">
+        Guardado únicamente en este dispositivo
+        <button id="driveDisconnect" class="small" hidden>Desconectar</button>
+      </div>
+      <div class="tools">
+        <input
+          class="search"
+          id="q"
+          placeholder="Buscar en la colección…"
+        /><button id="trashBtn">
+          🗑 Papelera (<span id="trashCount">0</span>)
+        </button>
+      </div>
+      <section class="filters">
+        <div>
+          <label>1. Clasificación</label
+          ><select id="ratingFilter">
+            <option value="">Todas</option>
+            <option value="5">5 estrellas</option>
+            <option value="4">4 estrellas</option>
+            <option value="3">3 estrellas</option>
+            <option value="2">2 estrellas</option>
+            <option value="1">1 estrella</option>
+          </select>
+        </div>
+        <div>
+          <label>2. Agrupar por</label
+          ><select id="groupField">
+            <option value="">Sin segundo filtro</option>
+            <option value="title">Título / obra</option>
+            <option value="genre">Género</option>
+            <option value="composer">Compositor</option>
+            <option value="performer">Intérprete</option>
+            <option value="album">Álbum</option>
+          </select>
+        </div>
+        <div>
+          <label>3. Elegir valor</label
+          ><select id="groupValue" disabled>
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div>
+          <label>Resultados</label>
+          <div id="count" style="padding: 10px">0 canciones</div>
+        </div>
+      </section>
+      <section class="cards" id="list"></section>
+    </main>
+    <div class="modal" id="editModal">
+      <section class="sheet">
+        <div class="sheet-head">
+          <div>
+            <div class="eyebrow" id="mode">NUEVO REGISTRO</div>
+            <h2 id="formTitle">Agregar canción</h2>
+          </div>
+          <button class="icon close">✕</button>
+        </div>
+        <form id="form">
+          <div class="grid" id="fields"></div>
+          <div class="field full" style="margin-top: 14px">
+            <label>Clasificación personal</label>
+            <div class="stars" id="formStars"></div>
+            <span class="badge" id="ratingText">Sin clasificar</span>
+          </div>
+          <label class="owned" style="margin-top: 16px"
+            ><input type="checkbox" id="owned" /> La tengo</label
+          >
+          <div class="form-actions">
+            <button type="button" class="close">Cancelar</button
+            ><button class="primary" type="submit">Guardar canción</button>
+          </div>
+        </form>
+      </section>
+    </div>
+    <div class="modal" id="trashModal">
+      <section class="sheet">
+        <div class="sheet-head">
+          <div>
+            <div class="eyebrow">REGISTROS ELIMINADOS</div>
+            <h2>Papelera</h2>
+          </div>
+          <button class="icon closeTrash">✕</button>
+        </div>
+        <div class="trash-list" id="trashList"></div>
+      </section>
+    </div>
+    <script src="google-config.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="drive-sync.js"></script>
+    <script>
+      const defs = [
+        ["title", "Título *"],
+        ["movementNumber", "Movimiento n.º"],
+        ["movementName", "Nombre del movimiento"],
+        ["performer", "Intérprete"],
+        ["composer", "Compositor"],
+        ["genre", "Género"],
+        ["album", "Álbum"],
+        ["director", "Director"],
+        ["year", "Año de lanzamiento"],
+        ["label", "Disquera"],
+        ["url", "Enlace para escuchar"],
+      ];
+      const colors = ["#f5c84c", "#d7c55a", "#7ec7a7", "#43bddd", "#4f7cff"];
+      let songs = load("hs-songs"),
+        trash = load("hs-trash"),
+        editing = null,
+        rating = 0;
+      function load(k) {
+        try {
+          return JSON.parse(localStorage.getItem(k) || "[]");
+        } catch {
+          return [];
+        }
+      }
+      function save() {
+        localStorage.setItem("hs-songs", JSON.stringify(songs));
+        localStorage.setItem("hs-trash", JSON.stringify(trash));
+        localStorage.setItem("hs-updated-at", new Date().toISOString());
+        render();
+        if (window.HuySanoDrive) window.HuySanoDrive.scheduleBackup();
+      }
+      function esc(s) {
+        return String(s || "").replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[m],
+        );
+      }
+      function stars(value, clickable, id) {
+        let c = value ? colors[value - 1] : "#46516d";
+        return [1, 2, 3, 4, 5]
+          .map(
+            (n) =>
+              `<button class="star" ${clickable ? `onclick="rateRow('${id}',${n})"` : ""} style="color:${n <= value ? c : "#46516d"}">★</button>`,
+          )
+          .join("");
+      }
+      function filtered() {
+        let a = songs,
+          rf = document.querySelector("#ratingFilter").value,
+          gf = document.querySelector("#groupField").value,
+          gv = document.querySelector("#groupValue").value,
+          q = document.querySelector("#q").value.toLowerCase();
+        if (rf) a = a.filter((s) => +s.rating === +rf);
+        if (gf && gv) a = a.filter((s) => String(s[gf] || "") === gv);
+        if (q)
+          a = a.filter((s) =>
+            Object.values(s).some((v) => String(v).toLowerCase().includes(q)),
+          );
+        return a;
+      }
+      function updateGroup() {
+        let gf = groupField.value,
+          rf = ratingFilter.value,
+          a = rf ? songs.filter((s) => +s.rating === +rf) : songs,
+          vals = gf
+            ? [...new Set(a.map((s) => s[gf]).filter(Boolean))].sort()
+            : [];
+        groupValue.innerHTML =
+          '<option value="">Todos</option>' +
+          vals.map((v) => `<option>${esc(v)}</option>`).join("");
+        groupValue.disabled = !gf;
+      }
+      function render() {
+        let a = filtered();
+        count.textContent = `${a.length} ${a.length === 1 ? "canción" : "canciones"}`;
+        trashCount.textContent = trash.length;
+        list.innerHTML = a.length
+          ? a
+              .map(
+                (s) =>
+                  `<article class="song"><div class="song-head"><div><h2>${esc(s.title)}</h2><div class="meta">${[s.composer, s.performer, s.genre, s.album].filter(Boolean).map(esc).join(" · ") || "Sin detalles adicionales"}</div></div><label class="owned"><input type="checkbox" ${s.owned ? "checked" : ""} onchange="toggleOwned('${s.id}',this.checked)"> La tengo</label></div><div class="stars">${stars(+s.rating || 0, true, s.id)}</div><div class="meta">${s.movementNumber ? `Movimiento ${esc(s.movementNumber)}` : ""} ${esc(s.movementName || "")}</div><div class="row-actions"><button class="small" onclick="openEdit('${s.id}')">✎ Editar</button>${s.url ? `<button class="small" onclick="location.href='${esc(s.url)}'">↗ Escuchar</button>` : ""}<button class="small danger" onclick="toTrash('${s.id}')">🗑 Papelera</button></div></article>`,
+              )
+              .join("")
+          : '<div class="empty">♫<h2>Tu colección está vacía</h2><p>Agrega la primera canción para comenzar.</p></div>';
+        renderTrash();
+      }
+      function toggleOwned(id, next) {
+        let s = songs.find((x) => x.id === id);
+        if (!s) return;
+        if (
+          confirm(
+            next
+              ? "¿Confirmas que sí tienes esta canción?"
+              : "¿Confirmas que ya no tienes esta canción?",
+          )
+        ) {
+          s.owned = next;
+          save();
+        } else render();
+      }
+      function rateRow(id, n) {
+        songs = songs.map((s) => (s.id === id ? { ...s, rating: n } : s));
+        save();
+      }
+      function toTrash(id) {
+        let s = songs.find((x) => x.id === id);
+        if (!s) return;
+        trash.unshift(s);
+        songs = songs.filter((x) => x.id !== id);
+        save();
+      }
+      function renderTrash() {
+        trashList.innerHTML = trash.length
+          ? trash
+              .map(
+                (s) =>
+                  `<div class="trash-item"><b>${esc(s.title)}</b><div><button class="small" onclick="restore('${s.id}')">↶ Restaurar</button><button class="small danger" onclick="destroy('${s.id}')">Eliminar</button></div></div>`,
+              )
+              .join("")
+          : '<div class="empty">La papelera está vacía.</div>';
+      }
+      function restore(id) {
+        let s = trash.find((x) => x.id === id);
+        songs.unshift(s);
+        trash = trash.filter((x) => x.id !== id);
+        save();
+      }
+      function destroy(id) {
+        if (
+          confirm("Este proceso es irreversible. ¿Eliminar definitivamente?")
+        ) {
+          trash = trash.filter((x) => x.id !== id);
+          save();
+        }
+      }
+      function openEdit(id) {
+        editing = id || null;
+        let s = songs.find((x) => x.id === id) || {};
+        mode.textContent = id ? "EDITAR REGISTRO" : "NUEVO REGISTRO";
+        formTitle.textContent = id ? "Editar canción" : "Agregar canción";
+        defs.forEach(
+          ([k]) => (document.querySelector(`[name=${k}]`).value = s[k] || ""),
+        );
+        owned.checked = !!s.owned;
+        rating = +s.rating || 0;
+        drawFormStars();
+        editModal.classList.add("open");
+      }
+      function drawFormStars() {
+        formStars.innerHTML = [1, 2, 3, 4, 5]
+          .map(
+            (n) =>
+              `<button type="button" class="star" onclick="rating=${n};drawFormStars()" style="color:${n <= rating ? colors[rating - 1] : "#46516d"}">★</button>`,
+          )
+          .join("");
+        ratingText.textContent = rating
+          ? `${rating} de 5 estrellas`
+          : "Sin clasificar";
+      }
+      fields.innerHTML = defs
+        .map(
+          ([k, l]) =>
+            `<div class="field ${["title", "movementName", "url"].includes(k) ? "full" : ""}"><label>${l}</label><input name="${k}" ${k === "title" ? "required" : ""} ${k === "year" ? 'type="number"' : ""} ${k === "url" ? 'type="url"' : ""}></div>`,
+        )
+        .join("");
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        let data = Object.fromEntries(
+          defs.map(([k]) => [k, form.elements[k].value.trim()]),
+        );
+        data.owned = owned.checked;
+        data.rating = rating;
+        if (editing)
+          songs = songs.map((s) => (s.id === editing ? { ...s, ...data } : s));
+        else
+          songs.unshift({
+            ...data,
+            id: Date.now() + "-" + Math.random().toString(16).slice(2),
+          });
+        editModal.classList.remove("open");
+        save();
+      };
+      add.onclick = () => openEdit();
+      document
+        .querySelectorAll(".close")
+        .forEach((b) => (b.onclick = () => editModal.classList.remove("open")));
+      trashBtn.onclick = () => trashModal.classList.add("open");
+      document
+        .querySelectorAll(".closeTrash")
+        .forEach(
+          (b) => (b.onclick = () => trashModal.classList.remove("open")),
+        );
+      [q, ratingFilter, groupValue].forEach((el) => (el.oninput = render));
+      groupField.onchange = () => {
+        updateGroup();
+        render();
+      };
+      ratingFilter.onchange = () => {
+        updateGroup();
+        render();
+      };
+      theme.onclick = () => {
+        document.body.classList.toggle("light");
+        let t = document.body.classList.contains("light") ? "light" : "dark";
+        localStorage.setItem("hs-theme", t);
+        theme.textContent = t === "light" ? "☾" : "☀";
+      };
+      if (localStorage.getItem("hs-theme") === "light") {
+        document.body.classList.add("light");
+        theme.textContent = "☾";
+      }
+      updateGroup();
+      render();
+      if (window.HuySanoDrive) {
+        window.HuySanoDrive.init({
+          getData: () => ({ songs, trash }),
+          setData: (data) => {
+            songs = Array.isArray(data.songs) ? data.songs : [];
+            trash = Array.isArray(data.trash) ? data.trash : [];
+            localStorage.setItem("hs-songs", JSON.stringify(songs));
+            localStorage.setItem("hs-trash", JSON.stringify(trash));
+            localStorage.setItem("hs-updated-at", data.updatedAt || new Date().toISOString());
+            updateGroup();
+            render();
+          },
+        });
+      }
+      if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+        navigator.serviceWorker.register("service-worker.js");
+      }
+    </script>
+  </body>
+</html>
