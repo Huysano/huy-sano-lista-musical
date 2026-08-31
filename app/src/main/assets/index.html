@@ -123,6 +123,32 @@
         color: var(--text);
         padding: 12px;
       }
+      .search-wrap {
+        position: relative;
+        min-width: 0;
+      }
+      .search-wrap .search {
+        padding-right: 48px;
+      }
+      .clear-search {
+        position: absolute;
+        top: 50%;
+        right: 8px;
+        transform: translateY(-50%);
+        width: 34px;
+        height: 34px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--muted);
+        font-size: 22px;
+        line-height: 1;
+      }
+      .clear-search:hover {
+        background: var(--panel2);
+        color: var(--text);
+      }
       .filters {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -324,11 +350,14 @@
         <button id="driveDisconnect" class="small" hidden>Desconectar</button>
       </div>
       <div class="tools">
-        <input
-          class="search"
-          id="q"
-          placeholder="Buscar en la colección…"
-        /><button id="trashBtn">
+        <div class="search-wrap">
+          <input
+            class="search"
+            id="q"
+            placeholder="Buscar en la colección…"
+          />
+          <button class="clear-search" id="clearSearch" type="button" aria-label="Borrar búsqueda" title="Borrar búsqueda" hidden>×</button>
+        </div><button id="trashBtn">
           🗑 Papelera (<span id="trashCount">0</span>)
         </button>
       </div>
@@ -646,7 +675,16 @@
         .forEach(
           (b) => (b.onclick = () => trashModal.classList.remove("open")),
         );
-      q.oninput = render;
+      q.oninput = () => {
+        clearSearch.hidden = !q.value;
+        render();
+      };
+      clearSearch.onclick = () => {
+        q.value = "";
+        clearSearch.hidden = true;
+        q.focus();
+        render();
+      };
       addFilter.onclick = () => {
         if (filterState.length < filterFields.length) filterState.push({ field: "", value: "" });
         renderFilters();
