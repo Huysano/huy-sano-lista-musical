@@ -491,9 +491,9 @@
           }).join("")}</optgroup>` : "";
           const sortOptions = allowedFields.filter(([field]) => field !== "rating").map(([field, label]) => {
             const key = encodeURIComponent(`${field}\u0000__sort__`);
-            return `<option value="${key}" ${key === currentKey ? "selected" : ""}>${esc(label)} — A a Z</option>`;
+            return `<option value="${key}" ${key === currentKey ? "selected" : ""}>${esc(label)}</option>`;
           }).join("");
-          const groupedOptions = ratingOptions + (sortOptions ? `<optgroup label="Ordenar alfabéticamente">${sortOptions}</optgroup>` : "");
+          const groupedOptions = ratingOptions + (sortOptions ? `<optgroup label="Ordenar por">${sortOptions}</optgroup>` : "");
           const remove = index ? `<button type="button" class="small danger remove-filter" data-index="${index}">✕</button>` : "";
           const title = index === 0 ? "Filtrar" : index === 1 ? "Filtro secundario" : `Filtro adicional ${index}`;
           const row = `<div class="filter-row"><div><label>${title}</label><select class="filter-choice" data-index="${index}"><option value="">Elegir filtro…</option>${groupedOptions}</select></div>${remove}</div>`;
@@ -674,7 +674,13 @@
         });
       }
       if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
-        navigator.serviceWorker.register("service-worker.js");
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (refreshing) return;
+          refreshing = true;
+          location.reload();
+        });
+        navigator.serviceWorker.register("service-worker.js").then((registration) => registration.update());
       }
     </script>
   </body>
