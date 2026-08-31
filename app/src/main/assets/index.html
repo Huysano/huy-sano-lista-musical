@@ -522,7 +522,7 @@
           ? a
               .map(
                 (s) =>
-                  `<article class="song" onclick="openEdit('${s.id}')" title="Tocar para editar"><div class="song-head"><div><h2>${esc(s.title)}</h2><div class="meta">${[s.composer, s.group, s.performer, s.genre, s.album].filter(Boolean).map(esc).join(" · ") || "Sin detalles adicionales"}</div></div><label class="owned" onclick="event.stopPropagation()"><input type="checkbox" ${s.owned ? "checked" : ""} onchange="toggleOwned('${s.id}',this.checked)"> La tengo</label></div><div class="stars">${stars(+s.rating || 0, true, s.id)}</div><div class="meta">${s.movementNumber ? `Movimiento ${esc(s.movementNumber)}` : ""} ${esc(s.movementName || "")}</div><div class="row-actions">${s.url ? `<button class="small" onclick="event.stopPropagation();openLink('${s.id}')">↗ Escuchar</button>` : ""}<button class="small danger" onclick="event.stopPropagation();toTrash('${s.id}')">🗑 Papelera</button></div></article>`,
+                  `<article class="song" onclick="openEdit('${s.id}')" title="Tocar para editar"><div class="song-head"><div><h2>${esc(s.title)}</h2><div class="meta">${[s.composer, s.group, s.performer, s.genre, s.album].filter(Boolean).map(esc).join(" · ") || "Sin detalles adicionales"}</div></div><label class="owned" onclick="event.stopPropagation()"><input type="checkbox" ${s.owned ? "checked" : ""} onchange="toggleOwned('${s.id}',this.checked)"> La tengo</label></div><div class="stars">${stars(+s.rating || 0, true, s.id)}</div><div class="meta">${s.movementNumber ? `Movimiento ${esc(s.movementNumber)}` : ""} ${esc(s.movementName || "")}</div><div class="row-actions">${s.url ? `<button class="small" onclick="event.stopPropagation();openLink('${s.id}')">↗ Escuchar</button><button class="small" onclick="event.stopPropagation();openBrave('${s.id}')">🦁 Abrir con Brave</button>` : ""}<button class="small danger" onclick="event.stopPropagation();toTrash('${s.id}')">🗑 Papelera</button></div></article>`,
               )
               .join("")
           : '<div class="empty">♫<h2>Tu colección está vacía</h2><p>Agrega la primera canción para comenzar.</p></div>';
@@ -553,6 +553,10 @@
       function openLink(id) {
         const url = songs.find((song) => song.id === id)?.url;
         if (url) window.open(url, "_blank", "noopener,noreferrer");
+      }
+      function openBrave(id) {
+        const url = songs.find((song) => song.id === id)?.url;
+        if (url) location.href = `brave://open-url?url=${encodeURIComponent(url)}`;
       }
       function toTrash(id) {
         let s = songs.find((x) => x.id === id);
