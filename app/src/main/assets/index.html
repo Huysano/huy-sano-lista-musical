@@ -453,11 +453,19 @@
           a = a.filter((s) =>
             Object.values(s).some((v) => String(v).toLowerCase().includes(q)),
           );
+        const sortFields = filterState.filter((filter) => filter.value === "__sort__").map((filter) => filter.field);
+        if (sortFields.length) a = [...a].sort((left, right) => {
+          for (const field of sortFields) {
+            const comparison = String(left[field] ?? "").localeCompare(String(right[field] ?? ""), "es", { numeric: true, sensitivity: "base" });
+            if (comparison) return comparison;
+          }
+          return 0;
+        });
         return a;
       }
       function applyFilters(items, filters) {
         return filters.reduce((result, filter) => {
-          if (!filter.field || filter.value === "") return result;
+          if (!filter.field || filter.value === "" || filter.value === "__sort__") return result;
           return result.filter((song) => String(song[filter.field] ?? "") === filter.value);
         }, items);
       }
@@ -473,22 +481,22 @@
       }
       function renderFilters() {
         const selected = filterState.map((filter) => filter.field).filter(Boolean);
-        let previousItems = songs;
         filtersHost.innerHTML = filterState.map((filter, index) => {
           const allowedFields = filterFields.filter(([key]) => key === filter.field || !selected.includes(key));
           const currentKey = filter.field ? encodeURIComponent(`${filter.field}\u0000${filter.value}`) : "";
-          const groupedOptions = allowedFields.map(([field, label]) => {
-            const values = valuesFor(field, previousItems);
-            const options = values.map((value) => {
-              const key = encodeURIComponent(`${field}\u0000${value}`);
-              return `<option value="${key}" ${key === currentKey ? "selected" : ""}>${esc(valueLabel(field, value))}</option>`;
-            }).join("");
-            return options ? `<optgroup label="${esc(label)}">${options}</optgroup>` : "";
+          const ratingAllowed = allowedFields.some(([field]) => field === "rating");
+          const ratingOptions = ratingAllowed ? `<optgroup label="Filtrar por clasificación">${[5, 4, 3, 2, 1].map((value) => {
+            const key = encodeURIComponent(`rating\u0000${value}`);
+            return `<option value="${key}" ${key === currentKey ? "selected" : ""}>${valueLabel("rating", String(value))}</option>`;
+          }).join("")}</optgroup>` : "";
+          const sortOptions = allowedFields.filter(([field]) => field !== "rating").map(([field, label]) => {
+            const key = encodeURIComponent(`${field}\u0000__sort__`);
+            return `<option value="${key}" ${key === currentKey ? "selected" : ""}>${esc(label)} — A a Z</option>`;
           }).join("");
+          const groupedOptions = ratingOptions + (sortOptions ? `<optgroup label="Ordenar alfabéticamente">${sortOptions}</optgroup>` : "");
           const remove = index ? `<button type="button" class="small danger remove-filter" data-index="${index}">✕</button>` : "";
           const title = index === 0 ? "Filtrar" : index === 1 ? "Filtro secundario" : `Filtro adicional ${index}`;
           const row = `<div class="filter-row"><div><label>${title}</label><select class="filter-choice" data-index="${index}"><option value="">Elegir filtro…</option>${groupedOptions}</select></div>${remove}</div>`;
-          previousItems = applyFilters(previousItems, [filter]);
           return row;
         }).join("");
         addFilter.disabled = filterState.length >= filterFields.length;
