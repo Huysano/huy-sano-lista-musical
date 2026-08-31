@@ -16,8 +16,9 @@
     if (el("driveStatus")) {
       el("driveStatus").firstChild.textContent = message + " ";
       el("driveDisconnect").hidden = !connected;
+      el("driveDisconnect").textContent = "Cambiar cuenta";
     }
-    if (el("driveBtn")) el("driveBtn").textContent = connected ? "☁ Sincronizar ahora" : "☁ Conectar Drive";
+    if (el("driveBtn")) el("driveBtn").textContent = "☁ Sincronizar";
   }
 
   async function driveJson(url, options = {}) {
@@ -46,7 +47,9 @@
   }
 
   async function uploadLocal() {
-    const payload = { ...api.getData(), updatedAt: localUpdatedAt(), formatVersion: 1 };
+    const updatedAt = new Date().toISOString();
+    localStorage.setItem("hs-updated-at", updatedAt);
+    const payload = { ...api.getData(), updatedAt, formatVersion: 2 };
     const metadata = remoteFileId
       ? { name: FILE_NAME }
       : { name: FILE_NAME, parents: ["appDataFolder"] };
@@ -69,21 +72,25 @@
   }
 
   async function sync() {
-    if (!accessToken) return connect();
+    if (!accessToken) return connect(false);
     status("Sincronizando con Google Drive…", true);
     try {
       const remote = await locateRemote();
       if (!remote) return uploadLocal();
       const cloud = await downloadRemote();
-      const cloudTime = Date.parse(cloud.updatedAt || remote.modifiedTime || 0);
-      const localTime = Date.parse(localUpdatedAt());
-      const hasLocalData = api.getData().songs.length || api.getData().trash.length;
-      if (cloudTime > localTime && (!hasLocalData || confirm("Google Drive tiene una lista más reciente. ¿Quieres usarla en este dispositivo?"))) {
-        api.setData(cloud);
-        status(`Lista recuperada de Google Drive · ${new Date().toLocaleString("es")}`, true);
-      } else {
-        await uploadLocal();
-      }
+      const local = api.getData();
+      const remoteSongs = Array.isArray(cloud.songs) ? cloud.songs : [];
+      const remoteTrash = Array.isArray(cloud.trash) ? cloud.trash : [];
+      const trashById = new Map([...remoteTrash, ...(local.trash || [])].filter(Boolean).map((item) => [item.id, item]));
+      const songsById = new Map([...remoteSongs, ...(local.songs || [])].filter(Boolean).map((item) => [item.id, item]));
+      trashById.forEach((_, id) => songsById.delete(id));
+      api.setData({
+        songs: [...songsById.values()],
+        trash: [...trashById.values()],
+        updatedAt: new Date().toISOString(),
+      });
+      await uploadLocal();
+      status(`Listas combinadas y sincronizadas · ${new Date().toLocaleString("es")}`, true);
     } catch (error) {
       console.error(error);
       status("No se pudo sincronizar; tus datos locales permanecen seguros.", !!accessToken);
@@ -91,7 +98,7 @@
     }
   }
 
-  function connect() {
+  function connect(changeAccount) {
     const clientId = window.HUY_SANO_GOOGLE_CLIENT_ID || "";
     if (!clientId || clientId.startsWith("PENDIENTE")) {
       alert("Falta configurar la credencial de Google de Huy Sano.");
@@ -110,26 +117,27 @@
         await sync();
       },
     });
-    tokenClient.requestAccessToken({ prompt: "consent" });
+    tokenClient.requestAccessToken({ prompt: changeAccount ? "select_account" : "" });
   }
 
-  function disconnect() {
+  function changeAccount() {
     if (accessToken && window.google?.accounts?.oauth2) google.accounts.oauth2.revoke(accessToken);
     accessToken = "";
     remoteFileId = "";
-    status("Guardado únicamente en este dispositivo", false);
+    status("Selecciona la cuenta de Google Drive", false);
+    connect(true);
   }
 
   window.HuySanoDrive = {
     init(callbacks) {
       api = callbacks;
-      el("driveBtn")?.addEventListener("click", () => (accessToken ? sync() : connect()));
-      el("driveDisconnect")?.addEventListener("click", disconnect);
+      el("driveBtn")?.addEventListener("click", sync);
+      el("driveDisconnect")?.addEventListener("click", changeAccount);
     },
     scheduleBackup() {
       if (!accessToken) return;
       clearTimeout(backupTimer);
-      backupTimer = setTimeout(uploadLocal, 1500);
+      backupTimer = setTimeout(sync, 1500);
     },
   };
 })();
