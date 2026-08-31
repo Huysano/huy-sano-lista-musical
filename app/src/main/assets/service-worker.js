@@ -1,4 +1,4 @@
-const CACHE = "huy-sano-v6";
+const CACHE = "huy-sano-v7";
 const APP = ["./", "index.html", "manifest.webmanifest", "icon.svg", "google-config.js", "drive-sync.js"];
 self.addEventListener("install", (event) => event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(APP))));
 self.addEventListener("activate", (event) => event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))));
