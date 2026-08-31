@@ -160,6 +160,7 @@
         border: 1px solid var(--line);
         border-radius: 16px;
         padding: 14px;
+        cursor: pointer;
       }
       .song-head {
         display: flex;
@@ -394,7 +395,7 @@
         ["director", "Director"],
         ["year", "Año de lanzamiento"],
         ["label", "Disquera"],
-        ["url", "Enlace para escuchar"],
+        ["url", "Enlace para escuchar (sitio o app)"],
       ];
       const colors = ["#f5c84c", "#d7c55a", "#7ec7a7", "#43bddd", "#4f7cff"];
       const filterFields = [
@@ -441,7 +442,7 @@
         return [1, 2, 3, 4, 5]
           .map(
             (n) =>
-              `<button class="star" ${clickable ? `onclick="rateRow('${id}',${n})"` : ""} style="color:${n <= value ? c : "#46516d"}">★</button>`,
+              `<button class="star" ${clickable ? `onclick="event.stopPropagation();rateRow('${id}',${n})"` : ""} style="color:${n <= value ? c : "#46516d"}">★</button>`,
           )
           .join("");
       }
@@ -513,7 +514,7 @@
           ? a
               .map(
                 (s) =>
-                  `<article class="song"><div class="song-head"><div><h2>${esc(s.title)}</h2><div class="meta">${[s.composer, s.group, s.performer, s.genre, s.album].filter(Boolean).map(esc).join(" · ") || "Sin detalles adicionales"}</div></div><label class="owned"><input type="checkbox" ${s.owned ? "checked" : ""} onchange="toggleOwned('${s.id}',this.checked)"> La tengo</label></div><div class="stars">${stars(+s.rating || 0, true, s.id)}</div><div class="meta">${s.movementNumber ? `Movimiento ${esc(s.movementNumber)}` : ""} ${esc(s.movementName || "")}</div><div class="row-actions"><button class="small" onclick="openEdit('${s.id}')">✎ Editar</button>${s.url ? `<button class="small" onclick="location.href='${esc(s.url)}'">↗ Escuchar</button>` : ""}<button class="small danger" onclick="toTrash('${s.id}')">🗑 Papelera</button></div></article>`,
+                  `<article class="song" onclick="openEdit('${s.id}')" title="Tocar para editar"><div class="song-head"><div><h2>${esc(s.title)}</h2><div class="meta">${[s.composer, s.group, s.performer, s.genre, s.album].filter(Boolean).map(esc).join(" · ") || "Sin detalles adicionales"}</div></div><label class="owned" onclick="event.stopPropagation()"><input type="checkbox" ${s.owned ? "checked" : ""} onchange="toggleOwned('${s.id}',this.checked)"> La tengo</label></div><div class="stars">${stars(+s.rating || 0, true, s.id)}</div><div class="meta">${s.movementNumber ? `Movimiento ${esc(s.movementNumber)}` : ""} ${esc(s.movementName || "")}</div><div class="row-actions">${s.url ? `<button class="small" onclick="event.stopPropagation();openLink('${s.id}')">↗ Escuchar</button>` : ""}<button class="small danger" onclick="event.stopPropagation();toTrash('${s.id}')">🗑 Papelera</button></div></article>`,
               )
               .join("")
           : '<div class="empty">♫<h2>Tu colección está vacía</h2><p>Agrega la primera canción para comenzar.</p></div>';
@@ -534,8 +535,16 @@
         } else render();
       }
       function rateRow(id, n) {
+        const song = songs.find((s) => s.id === id);
+        if (!song || Number(song.rating || 0) === n) return;
+        const previous = song.rating ? `${song.rating} estrellas` : "sin clasificación";
+        if (!confirm(`¿Cambiar la clasificación de ${previous} a ${n} ${n === 1 ? "estrella" : "estrellas"}?`)) return;
         songs = songs.map((s) => (s.id === id ? { ...s, rating: n } : s));
         save();
+      }
+      function openLink(id) {
+        const url = songs.find((song) => song.id === id)?.url;
+        if (url) window.open(url, "_blank", "noopener,noreferrer");
       }
       function toTrash(id) {
         let s = songs.find((x) => x.id === id);
