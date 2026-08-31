@@ -4,7 +4,8 @@
   const FILE_NAME = "huy-sano-lista-musical.json";
   const SCOPE = "https://www.googleapis.com/auth/drive.appdata";
   let tokenClient;
-  let accessToken = "";
+  let accessToken = localStorage.getItem("hs-drive-token") || "";
+  let tokenExpiresAt = Number(localStorage.getItem("hs-drive-token-expires") || 0);
   let remoteFileId = "";
   let api;
   let backupTimer;
@@ -15,8 +16,8 @@
   function status(message, connected) {
     if (el("driveStatus")) {
       el("driveStatus").firstChild.textContent = message + " ";
-      el("driveDisconnect").hidden = !connected;
-      el("driveDisconnect").textContent = "Cambiar cuenta";
+      el("driveDisconnect").hidden = false;
+      el("driveDisconnect").textContent = connected ? "Cambiar cuenta" : "Elegir cuenta";
     }
     if (el("driveBtn")) el("driveBtn").textContent = "☁ Sincronizar";
   }
@@ -72,7 +73,12 @@
   }
 
   async function sync() {
-    if (!accessToken) return connect(false);
+    if (!accessToken || Date.now() >= tokenExpiresAt) {
+      clearStoredToken();
+      status("Elige una cuenta para sincronizar con Google Drive.", false);
+      alert("Primero pulsa “Elegir cuenta”. El botón Sincronizar no abrirá el selector de cuentas.");
+      return;
+    }
     status("Sincronizando con Google Drive…", true);
     try {
       const remote = await locateRemote();
@@ -93,12 +99,18 @@
       status(`Listas combinadas y sincronizadas · ${new Date().toLocaleString("es")}`, true);
     } catch (error) {
       console.error(error);
-      status("No se pudo sincronizar; tus datos locales permanecen seguros.", !!accessToken);
-      alert("No se pudo sincronizar con Google Drive. La lista local no fue modificada.");
+      if (String(error.message).includes("401")) {
+        clearStoredToken();
+        status("La autorización venció. Pulsa Elegir cuenta para renovarla.", false);
+        alert("La autorización de Google venció. Pulsa “Elegir cuenta” para renovarla.");
+      } else {
+        status("No se pudo sincronizar; tus datos locales permanecen seguros.", !!accessToken);
+        alert("No se pudo sincronizar con Google Drive. La lista local no fue modificada.");
+      }
     }
   }
 
-  function connect(changeAccount) {
+  function chooseAccount() {
     const clientId = window.HUY_SANO_GOOGLE_CLIENT_ID || "";
     if (!clientId || clientId.startsWith("PENDIENTE")) {
       alert("Falta configurar la credencial de Google de Huy Sano.");
@@ -112,27 +124,37 @@
       client_id: clientId,
       scope: SCOPE,
       callback: async (response) => {
-        if (response.error) return status("Google no autorizó la conexión.", false);
+        if (response.error) return status(accessToken ? "Se conserva la cuenta conectada." : "No se eligió ninguna cuenta.", !!accessToken);
         accessToken = response.access_token;
+        tokenExpiresAt = Date.now() + Math.max(0, Number(response.expires_in || 3600) - 60) * 1000;
+        localStorage.setItem("hs-drive-token", accessToken);
+        localStorage.setItem("hs-drive-token-expires", String(tokenExpiresAt));
         await sync();
       },
+      error_callback: () => status(accessToken ? "Se conserva la cuenta conectada." : "No se eligió ninguna cuenta.", !!accessToken),
     });
-    tokenClient.requestAccessToken({ prompt: changeAccount ? "select_account" : "" });
+    tokenClient.requestAccessToken({ prompt: "select_account" });
   }
 
-  function changeAccount() {
-    if (accessToken && window.google?.accounts?.oauth2) google.accounts.oauth2.revoke(accessToken);
+  function clearStoredToken() {
     accessToken = "";
+    tokenExpiresAt = 0;
     remoteFileId = "";
-    status("Selecciona la cuenta de Google Drive", false);
-    connect(true);
+    localStorage.removeItem("hs-drive-token");
+    localStorage.removeItem("hs-drive-token-expires");
   }
 
   window.HuySanoDrive = {
     init(callbacks) {
       api = callbacks;
       el("driveBtn")?.addEventListener("click", sync);
-      el("driveDisconnect")?.addEventListener("click", changeAccount);
+      el("driveDisconnect")?.addEventListener("click", chooseAccount);
+      if (!accessToken || Date.now() >= tokenExpiresAt) {
+        clearStoredToken();
+        status("Guardado en este dispositivo · elige una cuenta para usar Drive", false);
+      } else {
+        status("Cuenta de Drive autorizada · pulsa Sincronizar", true);
+      }
     },
     scheduleBackup() {
       if (!accessToken) return;
